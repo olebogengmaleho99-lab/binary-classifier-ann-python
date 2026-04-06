@@ -46,7 +46,7 @@ def forward_prop(W1, b1, W2, b2, X):
     return Z1, A1, Z2, A2
 	
 def backward_prop(A1,A2,W2,X,Y,Z1):
-    BCE = -np.mean(Y*np.log(A2)+(1-Y)*np.log(1-A2))
+	A2 = get_predictions(A2)
     dW2 = 1 / m * (A2 - Y).dot(A1.T)
     db2 = 1 / m * np.sum(A2 - Y)
     dZ1 = W2.T.dot(A2 - Y) * ReLU_deriv(Z1)
