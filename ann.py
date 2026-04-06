@@ -2,18 +2,18 @@ import pandas as pd
 import numpy as np
 
 #import the dataset
-df = pd.read_csv('/Users/olebogengmaleho/Desktop/Datasets/house-votes-84.data.csv',
-		na_values=['?'])
+df = pd.read_csv('/Users/olebogengmaleho/Desktop/Datasets/house-votes-84.data.csv',na_values=['?'])
 #handling missing values and encoding categorial variables
 df.dropna(inplace=True)
+pd.set_option('future.no_silent_downcasting', True)
 df.replace(('y', 'n'), (1, 0), inplace=True)
-df.replace(('democrat', 'republican'), (1, 0), inplace=True)
+df.replace(('democrat', 'republican'), (1.0, 0.0), inplace=True)
 #converting pandas dataframe to numpy array
 data = np.array(df)
 m, n = data.shape
 #shuffling and splitting dataset into training and testing data
 np.random.shuffle(data)
-train = data[0:185].T
+train = data[0:186].T
 test = data[186:].T
 X_train = train[1:n] #features
 Y_train = train[0] #labels
@@ -54,7 +54,6 @@ def backward_prop(A1,A2,W2,X,Y,Z1):
     db1 = 1 / m * np.sum((W2.T).dot(A2 - Y)*ReLU_deriv(Z1))
     return dW1, db1, dW2, db2
 
-
 def gradient_descent(W1, b1, W2, b2, dW1, db1, dW2, db2, alpha):
     W1 = W1 - alpha * dW1
     b1 = b1 - alpha * db1    
@@ -63,11 +62,20 @@ def gradient_descent(W1, b1, W2, b2, dW1, db1, dW2, db2, alpha):
     return W1, b1, W2, b2
 
 def get_predictions(A2):
-    return np.argmax(A2, 0)
+    for i in range(A2.size):
+        if A2[0,i] >= 0.5:
+           A2[0,i] = 1.0
+        else: 
+            A2[0,i] = 0.0             
+    return A2
 
-def get_accuracy(predictions, Y):
-    print(predictions, Y)
-    return np.sum(predictions == Y) / Y.size
+def get_accuracy(ypred,ytrue):
+	n = ytrue.size
+    total = 0.0
+    for i in range(n):
+        if ypred[0,i] == ytrue[i]:
+           total = total + 1 
+    return ((total / n) * 100)
         
 W1,b1,W2,b2 = init_params()
 #training the model
@@ -77,13 +85,9 @@ for i in range(10000):
     W1, b1, W2, b2 = gradient_descent(W1, b1, W2, b2, dW1, db1, dW2, db2, 0.001)
 
 #testing model performance on unseen data
-for i in range(10000):
-    Z1, A1, Z2, A2 = forward_prop(W1, b1, W2, b2, X_test)
-    if i % 10 == 0:
-       print("Iteration: ", i)
-       predictions = get_predictions(A2)
-       print(get_accuracy(predictions, Y_test))
-
+Z1, A1, Z2, A2 = forward_prop(W1, b1, W2, b2, X_test)
+Accuracy = get_accuracy(get_predictions(A2),Y_test)
+print(f"Model accuracy is {Accuracy} %")
 
 
 
